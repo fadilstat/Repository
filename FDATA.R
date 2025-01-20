@@ -1,49 +1,4 @@
-
-
-## Normalitas
-## ============================================================================================== ##
-setClass("BinomialTest",slots = list(output = "ANY"))
-setMethod("initialize", "BinomialTest", function(.Object, data, alpha){
-  x <- as.vector(data)
-  
-  # motode
-  km <- ks.test(x,'pbinom') # Kolmogorov-Smirnov
-  
-  ket     <- c()
-  p_value <- c(km$p.value)
-  stat    <- c(km$statistic, sp$statistic)
-  ket[1]  <- ifelse(p_value[1] < alpha,'Tolak H0','Terima H0')
-  
-  hasil <- data.frame(
-    uji = c('Kolmogorov-Smirnov', 'Shapiro-Wilk'),
-    stat,
-    p_value,
-    ket
-  )
-  
-  colnames(hasil) <- c('Motode', 'Statistik','p-value','Keptusan')
-  
-  message('Hipotesis:')
-  cat('H0 : Data mengikuti distribusi normal\n')
-  cat('H1 : Data tidak mengikuti distribusi normal\n')
-  message('\nStatistik Uji:')
-  print(hasil)
-  message('\nKeputusan:')
-  
-  cat('Kolmogorov-Smirnov: ')
-  if(p_value[1] < alpha){cat('Data tidak mengikuti distribusi normal\n')}else{cat('Data mengikuti distribusi normal\n')}
-  cat('Shapiro-Wilk      : ')
-  if(p_value[2] < alpha){cat('Data tidak mengikuti distribusi normal\n')}else{cat('Data mengikuti distribusi normal\n')}
-  
-  .Object@output <- hasil
-  
-  return(.Object)
-})
-binomial.test <- function(data, alpha = 0.05){
-  new("BinomialTest", data = data, alpha = alpha)@output
-}
-
-## ============================================================================================== ##
+## Andi Tenri Ola
 
 ## EWMA
 ## ============================================================================================== ##
@@ -264,7 +219,7 @@ setMethod("initialize", "DEWMA", function(.Object, data, lambda, L, sig.value, k
   
   return(.Object)
 })
-rdewma <- function(data, lambda = 0.1, L = 3, sig.value = T, konstant = F, plot.dewma = F, out.control = T){
+rdewma.sign <- function(data, lambda = 0.1, L = 3, sig.value = T, konstant = F, plot.dewma = F, out.control = T){
   new("DEWMA",data, lambda, L, sig.value, konstant, plot.dewma, out.control)@output
 }
 ## ============================================================================================== ##
@@ -391,7 +346,7 @@ setMethod("initialize", "CUSUM", function(.Object, data, lambda, h, theta, plot.
   
   return(.Object)
 })
-rcusum <- function(data, lambda = 0.2, h = 4, theta = 0.1, plot.cusum = T, out.control = T){
+rcusum.sign <- function(data, lambda = 0.2, h = 4, theta = 0.1, plot.cusum = T, out.control = T){
   new("CUSUM",data, lambda, h, theta, plot.cusum, out.control)@output
 }
 ## ============================================================================================== ##
@@ -411,7 +366,7 @@ setMethod("initialize", "MDC", function(.Object, data, lambda, h, L, theta, plot
   k <- theta/2
   K <- k * sig
   
-  DEWMA <- rdewma(data, lambda = lmd, L = L, sig.value = T, konstant = F, plot.dewma = F, out.control = F)
+  DEWMA <- rdewma.sign(data, lambda = lmd, L = L, sig.value = T, konstant = F, plot.dewma = F, out.control = F)
   dewma <- DEWMA$DEWMA
   miu0p <- (miu + K)
   miu0m <- (miu - K)
@@ -521,7 +476,7 @@ setMethod("initialize", "MDC", function(.Object, data, lambda, h, L, theta, plot
   
   return(.Object)
 })
-rmdc <- function(data, lambda = 0.2, h = 4, L = 3,theta = 0.1, plot.cusum = T, out.control = T){
+rmdc.sign <- function(data, lambda = 0.2, h = 4, L = 3,theta = 0.1, plot.cusum = T, out.control = T){
   new("MDC", data, lambda, h, L, theta, plot.cusum, out.control)@output
 }
 ## ============================================================================================== ##
@@ -538,6 +493,8 @@ setMethod("initialize", "ARL", function(.Object, data, lambda, theta, L, h, info
   lmd  <- lambda
   
   n  <- length(data)
+  mx <- max(data)
+  pr <- mean(data)/n
   mi <- max.iterasi
   RL <- c()
   
@@ -545,7 +502,8 @@ setMethod("initialize", "ARL", function(.Object, data, lambda, theta, L, h, info
     for (i in 1:mi) {
       set.seed(i)
       
-      tmpx <- rnorm(n, mean = miu, sd = sig)
+      # tmpd  <- rnorm(n, miu, sig)
+      tmpx <- rnorm(n, miu, sig)
       mode <- rewma(tmpx, lambda = lmd, L = L, out.control = F, plot.ewma = F)
       data <- mode$EWMA$EWMA
       outc <- mode$EWMA$Cp_color
@@ -567,32 +525,11 @@ setMethod("initialize", "ARL", function(.Object, data, lambda, theta, L, h, info
     for (i in 1:mi) {
       set.seed(i)
       
-      tmpx <- rnorm(n, mean = miu, sd = sig)
-      mode <- rdewma(tmpx, lambda = lmd, L = L, out.control = F, plot.dewma = F)
+      # tmpd <- rnorm(n, miu, sig)
+      tmpx <- rnorm(n, miu, sig)
+      mode <- rdewma.sign(tmpx, lambda = lmd, L = L, out.control = F, plot.dewma = F)
       data <- mode$DEWMA$DEWMA
       outc <- mode$DEWMA$Cp_color
-      tmp0 <- 0
-      RL[i]<- 0
-      
-      in.control <- TRUE
-      while(in.control){
-        tmp0 <- tmp0 + 1
-        if(outc[tmp0] == "out control"){
-          RL[i] <- tmp0 - 1
-          in.control <- FALSE
-        }
-        if(tmp0 == n){in.control <- FALSE}
-      }
-    }
-  }
-  if(method[1] == "TEWMA"){
-    for (i in 1:mi) {
-      set.seed(i)
-      
-      tmpx <- rnorm(n, mean = miu, sd = sig)
-      mode <- rtewma(tmpx, lambda = lmd, L = L, konstant.tewma = konstant.tewma, out.control = F)
-      data <- mode$TEWMA$TEWMA
-      outc <- mode$TEWMA$Cp_color
       tmp0 <- 0
       RL[i]<- 0
       
@@ -611,8 +548,9 @@ setMethod("initialize", "ARL", function(.Object, data, lambda, theta, L, h, info
     for (i in 1:mi) {
       set.seed(i)
       
-      tmpx  <- rnorm(n, mean = miu, sd = sig)
-      mode  <- rcusum(tmpx, lambda = lmd, h = h, theta = theta, plot.cusum = F, out.control = F)
+      # tmpd  <- rnorm(n, miu, sig)
+      tmpx  <- rnorm(n, miu, sig)
+      mode  <- rcusum.sign(tmpx, lambda = lmd, h = h, theta = theta, plot.cusum = F, out.control = F)
       Cp    <- mode$CUSUM$Cp
       Cm    <- mode$CUSUM$Cm
       outCp <- mode$CUSUM$Cp_color
@@ -632,7 +570,6 @@ setMethod("initialize", "ARL", function(.Object, data, lambda, theta, L, h, info
       }
     }
   }
-  
   
   ARL <- mean(RL);ARL
   if(info){
@@ -657,16 +594,19 @@ setMethod("initialize", "ARLMDC", function(.Object, data, lambda, theta, L, h, i
   miu  <- mean(data)
   sig  <- sd(data)
   lmd  <- lambda
-  
+
   n  <- length(data)
+  mx <- max(data)
+  pr <- mean(data)/n
   mi <- max.iterasi
   RL <- c()
   
   for (i in 1:mi) {
     set.seed(i)
     
-    tmpx  <- rnorm(n, mean = miu, sd = sig)
-    mode  <- rmce(tmpx, lambda = lmd, h = h, L = L, theta = theta, plot.cusum = F, out.control = F)
+    tmpd  <- rnorm(n, miu, sig)
+    tmpx  <- ifelse(tmpd > L,0,1)
+    mode  <- rmdc.sign(tmpx, lambda = lmd, h = h, L = L, theta = theta, plot.cusum = F, out.control = F)
     MCEp  <- mode$CUSUM$Cp
     MCEm  <- mode$CUSUM$Cm
     outCp <- mode$CUSUM$Cp_color
