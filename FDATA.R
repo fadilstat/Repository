@@ -255,9 +255,6 @@ setMethod("initialize", "DEWMA.ISRT", function(.Object, data, lambda, L, plot.de
     
     UCL[i] <- miu + L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
     LCL[i] <- miu - L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
-    
-    # UCL[i] <- miu + L*(3/2 - (9/8 * miu)) * sqrt(std * (t[i]))
-    # LCL[i] <- miu - L*(3/2 - (9/8 * miu)) * sqrt(std * (t[i]))
   }
   
   
