@@ -3,50 +3,6 @@
 ## FISKA
 ## ============================================================================================== ##
 
-## Normalitas
-## ============================================================================================== ##
-setClass("BinomialTest",slots = list(output = "ANY"))
-setMethod("initialize", "BinomialTest", function(.Object, data, alpha){
-  x <- as.vector(data)
-  
-  # motode
-  km <- ks.test(x,'pbinom') # Kolmogorov-Smirnov
-  
-  ket     <- c()
-  p_value <- c(km$p.value)
-  stat    <- c(km$statistic, sp$statistic)
-  ket[1]  <- ifelse(p_value[1] < alpha,'Tolak H0','Terima H0')
-  
-  hasil <- data.frame(
-    uji = c('Kolmogorov-Smirnov', 'Shapiro-Wilk'),
-    stat,
-    p_value,
-    ket
-  )
-  
-  colnames(hasil) <- c('Motode', 'Statistik','p-value','Keptusan')
-  
-  message('Hipotesis:')
-  cat('H0 : Data mengikuti distribusi normal\n')
-  cat('H1 : Data tidak mengikuti distribusi normal\n')
-  message('\nStatistik Uji:')
-  print(hasil)
-  message('\nKeputusan:')
-  
-  cat('Kolmogorov-Smirnov: ')
-  if(p_value[1] < alpha){cat('Data tidak mengikuti distribusi normal\n')}else{cat('Data mengikuti distribusi normal\n')}
-  cat('Shapiro-Wilk      : ')
-  if(p_value[2] < alpha){cat('Data tidak mengikuti distribusi normal\n')}else{cat('Data mengikuti distribusi normal\n')}
-  
-  .Object@output <- hasil
-  
-  return(.Object)
-})
-binomial.test <- function(data, alpha = 0.05){
-  new("BinomialTest", data = data, alpha = alpha)@output
-}
-## ============================================================================================== ##
-
 ## EWMA 
 ## ============================================================================================== ##
 setClass("EWMA", slots = list(output = "ANY"))
@@ -297,8 +253,11 @@ setMethod("initialize", "DEWMA.ISRT", function(.Object, data, lambda, L, plot.de
     t_4  <- ((i^2)*((1-lmd)^((2*i)+4)))
     t[i] <- (lmd^4)*(1+(t_1-t_2+t_3-t_4))/(1-((1-lmd)^2)^3)
     
-    UCL[i] <- miu + L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
-    LCL[i] <- miu - L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
+    # UCL[i] <- miu + L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
+    # LCL[i] <- miu - L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
+    
+    UCL[i] <- miu + L*(3/2 - (9/8 * miu)) * sqrt(std * (t[i]))
+    LCL[i] <- miu - L*(3/2 - (9/8 * miu)) * sqrt(std * (t[i]))
   }
   
   
