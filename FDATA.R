@@ -253,11 +253,11 @@ setMethod("initialize", "DEWMA.ISRT", function(.Object, data, lambda, L, plot.de
     t_4  <- ((i^2)*((1-lmd)^((2*i)+4)))
     t[i] <- (lmd^4)*(1+(t_1-t_2+t_3-t_4))/(1-((1-lmd)^2)^3)
     
-    # UCL[i] <- miu + L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
-    # LCL[i] <- miu - L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
+    UCL[i] <- miu + L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
+    LCL[i] <- miu - L*(1/2 - (1/6 * miu)) * sqrt(std * (t[i]))
     
-    UCL[i] <- miu + L*(3/2 - (9/8 * miu)) * sqrt(std * (t[i]))
-    LCL[i] <- miu - L*(3/2 - (9/8 * miu)) * sqrt(std * (t[i]))
+    # UCL[i] <- miu + L*(3/2 - (9/8 * miu)) * sqrt(std * (t[i]))
+    # LCL[i] <- miu - L*(3/2 - (9/8 * miu)) * sqrt(std * (t[i]))
   }
   
   
